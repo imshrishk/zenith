@@ -2,9 +2,9 @@ import { Timestamp } from 'firebase/firestore';
 
 export interface User {
   uid: string;
-  email: string;
-  displayName: string;
-  photoURL: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
   joinDate: Timestamp;
 }
 
@@ -41,6 +41,7 @@ export interface Thread {
   likes: string[];
   comments: Comment[];
   tags: string[];
+  media: string[];
 }
 
 export interface Comment {
@@ -51,4 +52,11 @@ export interface Comment {
   content: string;
   createdAt: Timestamp;
   likes: string[];
+  media: string[];
+}
+
+export interface UploadedFile {
+  url: string;
+  type: 'image' | 'video';
+  name: string;
 }

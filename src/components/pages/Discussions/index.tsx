@@ -4,7 +4,13 @@ import { Button } from '../../common/Button';
 import { ThreadCard } from './ThreadCard';
 import { CreateThreadForm } from './CreateThreadForm';
 import { useAuth } from '../../../hooks/useAuth';
-import { getThreads } from '../../../services/discussionService';
+import {
+  getThreads,
+  createThread,
+  likeThread,
+  unlikeThread,
+  addComment
+} from '../../../services/discussionService';
 import type { Thread } from '../../../types/firebase';
 import { trackUserEngagement } from '../../../services/analyticsService';
 
@@ -12,26 +18,33 @@ export const DiscussionsPage = () => {
   const [isCreatingThread, setIsCreatingThread] = useState(false);
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
-  useEffect(() => {
-    const fetchThreads = async () => {
-      try {
-        const fetchedThreads = await getThreads();
-        setThreads(fetchedThreads);
-      } catch (error) {
-        console.error('Error fetching threads:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchThreads = async () => {
+    try {
+      const fetchedThreads = await getThreads();
+      setThreads(fetchedThreads);
+      setError(null);
+    } catch (error) {
+      setError('Failed to load discussions. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchThreads();
   }, []);
 
-  const handleCreateThread = async (data: { title: string; content: string; tags: string[] }) => {
+  const handleCreateThread = async (data: { 
+    title: string;
+    content: string;
+    tags: string[];
+    media: string[];
+  }) => {
     if (!user) return;
-
+    
     try {
       await createThread(
         user.uid,
@@ -39,17 +52,60 @@ export const DiscussionsPage = () => {
         user.photoURL || '',
         data.title,
         data.content,
-        data.tags
+        data.tags,
+        data.media
       );
-      
       trackUserEngagement('create', 'thread');
       setIsCreatingThread(false);
-      
-      // Refresh threads
-      const updatedThreads = await getThreads();
-      setThreads(updatedThreads);
+      await fetchThreads();
     } catch (error) {
-      console.error('Error creating thread:', error);
+      setError('Failed to create thread. Please try again.');
+    }
+  };
+
+  const handleLikeThread = async (threadId: string, isLiked: boolean) => {
+    if (!user) return;
+    
+    try {
+      if (isLiked) {
+        await unlikeThread(threadId, user.uid);
+      } else {
+        await likeThread(threadId, user.uid);
+      }
+      trackUserEngagement('like', 'thread');
+      await fetchThreads();
+    } catch (error) {
+      setError('Failed to update like. Please try again.');
+    }
+  };
+
+  const handleComment = async (threadId: string, content: string, media: string[] = []) => {
+    if (!user) {
+      setError('You must be logged in to comment');
+      return;
+    }
+
+    if (!content.trim()) {
+      setError('Comment cannot be empty');
+      return;
+    }
+
+    setError(null);
+    
+    try {
+      await addComment(
+        threadId,
+        user.uid,
+        user.displayName || 'Anonymous',
+        user.photoURL || '',
+        content,
+        media
+      );
+      
+      trackUserEngagement('comment', 'thread');
+      await fetchThreads();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to add comment. Please try again.');
     }
   };
 
@@ -69,6 +125,12 @@ export const DiscussionsPage = () => {
         )}
       </div>
 
+      {error && (
+        <div className="bg-red-50 text-red-600 p-4 rounded-md mb-6">
+          {error}
+        </div>
+      )}
+
       {isCreatingThread ? (
         <CreateThreadForm
           onSubmit={handleCreateThread}
@@ -81,22 +143,8 @@ export const DiscussionsPage = () => {
               key={thread.id}
               {...thread}
               currentUser={user}
-              onLike={async () => {
-                if (!user) return;
-                try {
-                  if (thread.likes.includes(user.uid)) {
-                    await unlikeThread(thread.id, user.uid);
-                  } else {
-                    await likeThread(thread.id, user.uid);
-                  }
-                  trackUserEngagement('like', 'thread');
-                  // Refresh threads
-                  const updatedThreads = await getThreads();
-                  setThreads(updatedThreads);
-                } catch (error) {
-                  console.error('Error updating like:', error);
-                }
-              }}
+              onLike={() => handleLikeThread(thread.id, thread.likes.includes(user?.uid || ''))}
+              onComment={(content, media) => handleComment(thread.id, content, media)}
             />
           ))}
         </div>

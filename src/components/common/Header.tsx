@@ -1,140 +1,103 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Menu, X, User, LogOut } from 'lucide-react';
-import { Button } from './Button';
-import { useAuthStore } from '../../store/authStore';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { Menu, X, User, LogOut } from "lucide-react";
+import { Button } from "./Button"; // Correct import for Button component
+import { useAuthStore } from "../../store/authStore"; // Importing the auth store
+import { GoogleSignInButton } from "../auth/GoogleSignInButton"; // Correct import for GoogleSignInButton
 
-export const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const { user, signOut } = useAuthStore();
+export const Header: React.FC = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut } = useAuthStore(); // Accessing user and signOut from the auth store
 
-  const navigation = [
-    { name: 'Home', href: '/' },
-    { name: 'Methods', href: '/methods' },
-    { name: 'Benefits', href: '/benefits' },
-    { name: 'Q&A', href: '/qna' },
-    { name: 'Discussions', href: '/discussions' },
+  const navigationLinks = [
+    { name: "Home", href: "/" },
+    { name: "Methods", href: "/methods" },
+    { name: "Benefits", href: "/benefits" },
+    { name: "Q&A", href: "/qna" },
+    { name: "Discussions", href: "/discussions" },
   ];
 
   return (
-    <header className="bg-white shadow-sm">
-      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" aria-label="Top">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center">
-              <span className="text-2xl font-bold text-indigo-600">Zenith Mind</span>
-            </Link>
-          </div>
+    <header className="bg-white shadow-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center py-4">
+          {/* Logo */}
+          <Link to="/" className="text-xl font-bold text-gray-800">
+            Zenith
+          </Link>
 
-          {/* Desktop navigation */}
-          <div className="hidden md:flex md:items-center md:space-x-6">
-            {navigation.map((item) => (
+          {/* Navigation Links */}
+          <nav className="hidden md:flex space-x-4">
+            {navigationLinks.map((link) => (
               <Link
-                key={item.name}
-                to={item.href}
-                className="text-base font-medium text-gray-500 hover:text-gray-900"
+                key={link.name}
+                to={link.href}
+                className="text-gray-600 hover:text-gray-800"
               >
-                {item.name}
+                {link.name}
               </Link>
             ))}
-            
-            {user ? (
-              <div className="flex items-center space-x-4">
-                <Link to="/profile">
-                  <Button variant="ghost" size="sm">
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </Button>
-                </Link>
-                <Button variant="outline" size="sm" onClick={() => signOut()}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <Link to="/login">
-                  <Button variant="ghost" size="sm">Sign In</Button>
-                </Link>
-                <Link to="/register">
-                  <Button variant="primary" size="sm">Sign Up</Button>
-                </Link>
-              </div>
-            )}
-          </div>
+          </nav>
 
-          {/* Mobile menu button */}
-          <div className="flex md:hidden">
+          {/* User Controls */}
+          <div className="flex items-center space-x-4">
+            {user ? (
+              <>
+                <span className="text-gray-800 font-medium">
+                  {user.displayName || "User"}
+                </span>
+                <Button onClick={signOut}>
+                  <LogOut size={16} />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <GoogleSignInButton />
+            )}
+
+            {/* Mobile Menu Toggle */}
             <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
+              className="md:hidden text-gray-800"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              <span className="sr-only">Open main menu</span>
-              {isMenuOpen ? (
-                <X className="block h-6 w-6" aria-hidden="true" />
-              ) : (
-                <Menu className="block h-6 w-6" aria-hidden="true" />
-              )}
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Mobile menu */}
-        {isMenuOpen && (
-          <div className="md:hidden">
-            <div className="space-y-1 px-2 pb-3 pt-2">
-              {navigation.map((item) => (
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <nav className="md:hidden bg-white shadow-lg">
+          <ul className="space-y-2 p-4">
+            {navigationLinks.map((link) => (
+              <li key={link.name}>
                 <Link
-                  key={item.name}
-                  to={item.href}
-                  className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                  to={link.href}
+                  className="block text-gray-600 hover:text-gray-800"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  {item.name}
+                  {link.name}
                 </Link>
-              ))}
-              {user ? (
-                <>
-                  <Link
-                    to="/profile"
-                    className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Profile
-                  </Link>
-                  <button
-                    onClick={() => {
-                      signOut();
-                      setIsMenuOpen(false);
-                    }}
-                    className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                  >
-                    Sign Out
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-      </nav>
+              </li>
+            ))}
+            {user ? (
+              <li>
+                <button
+                  onClick={signOut}
+                  className="w-full text-left text-gray-600 hover:text-gray-800"
+                >
+                  Logout
+                </button>
+              </li>
+            ) : (
+              <li>
+                <GoogleSignInButton />
+              </li>
+            )}
+          </ul>
+        </nav>
+      )}
     </header>
   );
 };
