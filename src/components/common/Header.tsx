@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, User, LogOut } from "lucide-react";
-import { Button } from "./Button"; // Correct import for Button component
-import { useAuthStore } from "../../store/authStore"; // Importing the auth store
-import { GoogleSignInButton } from "../auth/GoogleSignInButton"; // Correct import for GoogleSignInButton
+import { Button } from "./Button";
+import { useAuthStore } from "../../store/authStore";
+import { GoogleSignInButton } from "../auth/GoogleSignInButton";
 
 export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, signOut } = useAuthStore(); // Accessing user and signOut from the auth store
+  const { user, signOut } = useAuthStore();
 
   const navigationLinks = [
     { name: "Home", href: "/" },
