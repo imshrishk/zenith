@@ -72,11 +72,11 @@ export const ThreadCard: React.FC<ThreadCardProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center mb-4">
-        <img
-          src={authorPhoto || '/default-avatar.png'}
-          alt={authorName}
-          className="w-10 h-10 rounded-full mr-3"
-        />
+      <img
+        src={authorPhoto || 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'}
+        alt={authorName}
+        className="w-10 h-10 rounded-full mr-3"
+      />
         <div>
           <h3 className="text-xl font-semibold">{title}</h3>
           <div className="text-sm text-gray-500">
@@ -191,11 +191,11 @@ export const ThreadCard: React.FC<ThreadCardProps> = ({
           {comments.map((comment) => (
             <div key={comment.id} className="border-t pt-4">
               <div className="flex items-center mb-2">
-                <img
-                  src={comment.authorPhoto || '/default-avatar.png'}
-                  alt={comment.authorName}
-                  className="w-8 h-8 rounded-full mr-2"
-                />
+              <img
+                src={comment.authorPhoto || 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'} 
+                alt={comment.authorName}
+                className="w-8 h-8 rounded-full mr-2"
+              />
                 <div>
                   <span className="font-medium">{comment.authorName}</span>
                   <span className="text-sm text-gray-500 ml-2">

@@ -4,6 +4,7 @@ import { Header } from './components/common/Header';
 import { HomePage } from './components/pages/Home';
 import { MethodsPage } from './components/pages/Methods';
 import { BenefitsPage } from './components/pages/Benefits';
+import { FAQPage } from './components/pages/FAQ';
 import { QnAPage } from './components/pages/QnA';
 import { DiscussionsPage } from './components/pages/Discussions';
 import { ProfilePage } from './components/pages/Profile';
@@ -18,6 +19,7 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/methods" element={<MethodsPage />} />
             <Route path="/benefits" element={<BenefitsPage />} />
+            <Route path="/faq" element={<FAQPage />} />
             <Route path="/qna" element={<QnAPage />} />
             <Route path="/discussions" element={<DiscussionsPage />} />
             <Route path="/profile" element={<ProfilePage />} />

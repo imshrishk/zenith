@@ -72,28 +72,22 @@ export const addComment = async (
 
   try {
     const threadRef = doc(db, 'threads', threadId);
-    
-    // Verify thread exists
-    const threadDoc = await getDocs(query(collection(db, 'threads')));
-    const thread = threadDoc.docs.find(doc => doc.id === threadId);
-    
-    if (!thread) {
-      throw new Error('Thread not found');
-    }
-
     const comment: Comment = {
       id: crypto.randomUUID(),
       authorId: userId,
       authorName: userName,
       authorPhoto: userPhoto,
       content,
-      createdAt: serverTimestamp() as Timestamp,
+      createdAt: new Date(),
       likes: [],
       media
     };
 
     await updateDoc(threadRef, {
-      comments: arrayUnion(comment)
+      comments: arrayUnion({
+        ...comment,
+        createdAt: new Date() // Use actual Date instead of serverTimestamp
+      })
     });
   } catch (error) {
     if (error instanceof FirestoreError) {

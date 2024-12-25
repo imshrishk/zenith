@@ -98,27 +98,21 @@ export const addAnswer = async (
 
   try {
     const questionRef = doc(db, 'questions', questionId);
-    
-    // Verify question exists
-    const questionDoc = await getDocs(query(collection(db, 'questions')));
-    const question = questionDoc.docs.find(doc => doc.id === questionId);
-    
-    if (!question) {
-      throw new Error('Question not found');
-    }
-
     const answer: Answer = {
       id: crypto.randomUUID(),
       authorId: userId,
       authorName: userName,
       authorPhoto: userPhoto,
       content,
-      createdAt: serverTimestamp(),
+      createdAt: new Date(),
       likes: []
     };
 
     await updateDoc(questionRef, {
-      answers: arrayUnion(answer)
+      answers: arrayUnion({
+        ...answer,
+        createdAt: new Date()
+      })
     });
   } catch (error) {
     if (error instanceof FirestoreError) {
