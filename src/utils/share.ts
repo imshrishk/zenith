@@ -1,17 +1,23 @@
 export const shareContent = async (title: string, text: string) => {
+  const fallbackUrl = "https://zenithmind.vercel.app/";
+
   if (navigator.share) {
     try {
       await navigator.share({
         title,
         text,
-        url: window.location.href,
+        url: fallbackUrl,
       });
     } catch (error) {
-      console.error('Error sharing:', error);
+      console.error("Error sharing:", error);
     }
   } else {
-    // Fallback to copying to clipboard
-    const shareText = `${title}\n${text}\n${window.location.href}`;
-    await navigator.clipboard.writeText(shareText);
+    const shareText = `${title}\n${text}\n${fallbackUrl}`;
+    try {
+      await navigator.clipboard.writeText(shareText);
+      console.log("Content copied to clipboard:", shareText);
+    } catch (error) {
+      console.error("Error copying to clipboard:", error);
+    }
   }
 };
