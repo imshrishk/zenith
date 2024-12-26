@@ -9,7 +9,9 @@ import {
   createThread,
   likeThread,
   unlikeThread,
-  addComment
+  addComment,
+  deleteThread,
+  deleteComment
 } from '../../../services/discussionService';
 import type { Thread } from '../../../types/firebase';
 import { trackUserEngagement } from '../../../services/analyticsService';
@@ -37,14 +39,13 @@ export const DiscussionsPage = () => {
     fetchThreads();
   }, []);
 
-  const handleCreateThread = async (data: { 
+  const handleCreateThread = async (data: {
     title: string;
     content: string;
     tags: string[];
     media: string[];
   }) => {
     if (!user) return;
-    
     try {
       await createThread(
         user.uid,
@@ -63,9 +64,30 @@ export const DiscussionsPage = () => {
     }
   };
 
+  const handleDeleteThread = async (threadId: string) => {
+    if (!user) return;
+    try {
+      await deleteThread(threadId);
+      trackUserEngagement('delete', 'thread');
+      await fetchThreads(); // Refresh the threads list
+    } catch (error) {
+      setError('Failed to delete thread. Please try again.');
+    }
+  };
+
+  const handleDeleteComment = async (threadId: string, commentId: string) => {
+    if (!user) return;
+    try {
+      await deleteComment(threadId, commentId);
+      trackUserEngagement('delete', 'comment');
+      await fetchThreads(); // Refresh the threads list
+    } catch (error) {
+      setError('Failed to delete comment. Please try again.');
+    }
+  };
+
   const handleLikeThread = async (threadId: string, isLiked: boolean) => {
     if (!user) return;
-    
     try {
       if (isLiked) {
         await unlikeThread(threadId, user.uid);
@@ -84,14 +106,11 @@ export const DiscussionsPage = () => {
       setError('You must be logged in to comment');
       return;
     }
-
     if (!content.trim()) {
       setError('Comment cannot be empty');
       return;
     }
-
     setError(null);
-    
     try {
       await addComment(
         threadId,
@@ -101,7 +120,6 @@ export const DiscussionsPage = () => {
         content,
         media
       );
-      
       trackUserEngagement('comment', 'thread');
       await fetchThreads();
     } catch (error) {
@@ -145,6 +163,8 @@ export const DiscussionsPage = () => {
               currentUser={user}
               onLike={() => handleLikeThread(thread.id, thread.likes.includes(user?.uid || ''))}
               onComment={(content, media) => handleComment(thread.id, content, media)}
+              onDelete={() => handleDeleteThread(thread.id)}
+              onDeleteComment={(commentId) => handleDeleteComment(thread.id, commentId)}
             />
           ))}
         </div>

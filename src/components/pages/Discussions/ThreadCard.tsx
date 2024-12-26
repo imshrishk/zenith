@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageSquare, Heart, Share2 } from 'lucide-react';
+import { MessageSquare, Heart, Share2, Trash2 } from 'lucide-react';
 import { Button } from '../../common/Button';
 import { RichTextEditor } from '../../common/RichTextEditor';
 import { MediaUploader } from '../../common/MediaUploader';
@@ -13,11 +13,14 @@ interface ThreadCardProps extends Thread {
   currentUser: User | null;
   onLike: () => Promise<void>;
   onComment: (content: string, media: string[]) => Promise<void>;
+  onDelete: () => Promise<void>;
+  onDeleteComment: (commentId: string) => Promise<void>;
 }
 
 export const ThreadCard: React.FC<ThreadCardProps> = ({
   id,
   title,
+  authorId,
   authorName,
   authorPhoto,
   content,
@@ -28,7 +31,9 @@ export const ThreadCard: React.FC<ThreadCardProps> = ({
   media,
   currentUser,
   onLike,
-  onComment
+  onComment,
+  onDelete,
+  onDeleteComment,
 }) => {
   const [isCommenting, setIsCommenting] = useState(false);
   const [commentContent, setCommentContent] = useState('');
@@ -43,7 +48,7 @@ export const ThreadCard: React.FC<ThreadCardProps> = ({
       setIsSubmitting(true);
       await onComment(
         commentContent,
-        commentMedia.map(file => file.url)
+        commentMedia.map((file) => file.url)
       );
       setCommentContent('');
       setCommentMedia([]);
@@ -66,28 +71,41 @@ export const ThreadCard: React.FC<ThreadCardProps> = ({
     }
   };
 
+  const canDelete = currentUser && authorId === currentUser.uid;
   const isLiked = currentUser && likes.includes(currentUser.uid);
   const formattedDate = formatDistanceToNow(createdAt?.toDate() || new Date(), { addSuffix: true });
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-center mb-4">
-      <img
-        src={authorPhoto || 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'}
-        alt={authorName}
-        className="w-10 h-10 rounded-full mr-3"
-      />
-        <div>
-          <h3 className="text-xl font-semibold">{title}</h3>
-          <div className="text-sm text-gray-500">
-            <span>{authorName}</span>
-            <span className="mx-2">•</span>
-            <span>{formattedDate}</span>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+        <img
+          src={authorPhoto || 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'}
+          alt={authorName}
+          className="w-10 h-10 rounded-full mr-3"
+        />
+          <div>
+            <h3 className="text-xl font-semibold">{title}</h3>
+            <div className="text-sm text-gray-500">
+              <span>{authorName}</span>
+              <span className="mx-2">•</span>
+              <span>{formattedDate}</span>
+            </div>
           </div>
         </div>
+        {canDelete && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onDelete}
+            className="text-red-500 hover:text-red-700"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
-      <div 
+      <div
         className="prose max-w-none mb-4"
         dangerouslySetInnerHTML={{ __html: content }}
       />
@@ -119,16 +137,9 @@ export const ThreadCard: React.FC<ThreadCardProps> = ({
 
       <div className="flex items-center justify-between border-t border-b py-2 my-4">
         <div className="flex space-x-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onLike}
-            disabled={!currentUser}
-          >
+          <Button variant="ghost" size="sm" onClick={onLike} disabled={!currentUser}>
             <Heart
-              className={`h-4 w-4 mr-1 ${
-                isLiked ? 'fill-red-500 text-red-500' : ''
-              }`}
+              className={`h-4 w-4 mr-1 ${isLiked ? 'fill-red-500 text-red-500' : ''}`}
             />
             {likes.length}
           </Button>
@@ -141,11 +152,7 @@ export const ThreadCard: React.FC<ThreadCardProps> = ({
             <MessageSquare className="h-4 w-4 mr-1" />
             {comments.length}
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleShare}
-          >
+          <Button variant="ghost" size="sm" onClick={handleShare}>
             <Share2 className="h-4 w-4 mr-1" />
             Share
           </Button>
@@ -161,24 +168,17 @@ export const ThreadCard: React.FC<ThreadCardProps> = ({
           />
           <div className="mt-4">
             <MediaUploader
-              onUploadComplete={files => setCommentMedia(files)}
+              onUploadComplete={(files) => setCommentMedia(files)}
               maxFiles={2}
               maxSizeMB={5}
               existingFiles={commentMedia}
             />
           </div>
           <div className="flex justify-end space-x-4 mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setIsCommenting(false)}
-              disabled={isSubmitting}
-            >
+            <Button variant="outline" onClick={() => setIsCommenting(false)} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={!commentContent.trim() || isSubmitting}
-            >
+            <Button type="submit" disabled={!commentContent.trim() || isSubmitting}>
               {isSubmitting ? 'Posting...' : 'Post Comment'}
             </Button>
           </div>
@@ -190,20 +190,30 @@ export const ThreadCard: React.FC<ThreadCardProps> = ({
           <h4 className="font-medium">Comments</h4>
           {comments.map((comment) => (
             <div key={comment.id} className="border-t pt-4">
-              <div className="flex items-center mb-2">
-              <img
-                src={comment.authorPhoto || 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'} 
-                alt={comment.authorName}
-                className="w-8 h-8 rounded-full mr-2"
-              />
-                <div>
-                  <span className="font-medium">{comment.authorName}</span>
-                  <span className="text-sm text-gray-500 ml-2">
-                    {formatDistanceToNow(comment.createdAt.toDate(), {
-                      addSuffix: true,
-                    })}
-                  </span>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                <img
+                  src={comment.authorPhoto || 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'} 
+                  alt={comment.authorName}
+                  className="w-8 h-8 rounded-full mr-2"
+                />
+                  <div>
+                    <span className="font-medium">{comment.authorName}</span>
+                    <span className="text-sm text-gray-500 ml-2">
+                      {formatDistanceToNow(comment.createdAt.toDate(), { addSuffix: true })}
+                    </span>
+                  </div>
                 </div>
+                {currentUser && comment.authorId === currentUser.uid && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDeleteComment(comment.id)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
               <div
                 className="prose max-w-none"

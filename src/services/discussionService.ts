@@ -165,3 +165,33 @@ export const unlikeThread = async (threadId: string, userId: string): Promise<vo
     throw new Error('Failed to unlike thread');
   }
 };
+
+export const deleteThread = async (threadId: string): Promise<void> => {
+  try {
+    const threadRef = doc(db, 'threads', threadId);
+    await deleteDoc(threadRef);
+  } catch (error) {
+    throw new Error('Failed to delete thread');
+  }
+};
+
+export const deleteComment = async (
+  threadId: string,
+  commentId: string
+): Promise<void> => {
+  try {
+    const threadRef = doc(db, 'threads', threadId);
+    const thread = (await getDocs(query(collection(db, 'threads')))).docs
+      .find(doc => doc.id === threadId)?.data() as Thread;
+    
+    if (!thread) throw new Error('Thread not found');
+    
+    const updatedComments = thread.comments.filter(
+      comment => comment.id !== commentId
+    );
+    
+    await updateDoc(threadRef, { comments: updatedComments });
+  } catch (error) {
+    throw new Error('Failed to delete comment');
+  }
+};
