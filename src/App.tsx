@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Header } from './components/common/Header';
+import { Footer } from './components/common/Footer';
 import { HomePage } from './components/pages/Home';
 import { MethodsPage } from './components/pages/Methods';
 import { BenefitsPage } from './components/pages/Benefits';
@@ -12,9 +13,9 @@ import { ProfilePage } from './components/pages/Profile';
 export default function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
         <Header />
-        <main>
+        <main className="flex-grow">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/methods" element={<MethodsPage />} />
@@ -25,6 +26,7 @@ export default function App() {
             <Route path="/profile" element={<ProfilePage />} />
           </Routes>
         </main>
+        <Footer />
       </div>
     </Router>
   );
