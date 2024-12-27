@@ -8,7 +8,7 @@ export const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center justify-center space-y-4">
           <div className="text-gray-600">
-            © {currentYear} Zenith. All Rights Reserved.
+            © {currentYear} ZenithMind. All Rights Reserved.
           </div>
           <div className="text-gray-600">
             Developed by{' '}

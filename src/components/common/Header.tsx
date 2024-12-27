@@ -24,7 +24,7 @@ export const Header: React.FC = () => {
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
           <Link to="/" className="text-xl font-bold text-gray-800">
-            Zenith
+            ZenithMind
           </Link>
 
           {/* Navigation Links */}
