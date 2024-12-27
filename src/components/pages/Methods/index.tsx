@@ -26,6 +26,21 @@ const meditations = [
   },
 ];
 
+const practicalMeditationContent = [
+  {
+    title: 'Dynamic Meditation',
+    description: 'Combining physical activity and breath holding (Kumbhak), Dynamic Meditation offers quicker results and simplicity. Personalize durations for optimal results.',
+  },
+  {
+    title: 'Dark Meditation',
+    description: 'Meditating in absolute darkness silences sensory inputs, accelerating spiritual progress. Historically practiced in caves, it remains a powerful method today.',
+  },
+  {
+    title: 'Dark Dynamic Meditation',
+    description: 'Combining the benefits of Dynamic Meditation with darkness, this is one of the most effective meditation practices for profound spiritual growth.',
+  },
+];
+
 export const MethodsPage = () => {
   const [selectedMeditation, setSelectedMeditation] = useState<number | null>(null);
 
@@ -34,21 +49,25 @@ export const MethodsPage = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {selectedMeditation ? (
         <div className="max-w-3xl mx-auto py-12">
           <h2 className="text-3xl font-bold text-center mb-8">
-            {meditations.find(m => m.id === selectedMeditation)?.title}
+            {meditations.find((m) => m.id === selectedMeditation)?.title}
           </h2>
           <Timer
-            initialTime={meditations.find(m => m.id === selectedMeditation)?.duration! * 60}
+            initialTime={meditations.find((m) => m.id === selectedMeditation)?.duration! * 60}
             onComplete={handleComplete}
           />
         </div>
       ) : (
         <div>
-          <h2 className="text-3xl font-bold text-center mb-8">Choose Your Practice</h2>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <h2 className="text-4xl font-bold text-center mb-8">Explore Meditation Methods</h2>
+          <p className="text-lg text-gray-700 text-center mb-12">
+            Discover effective meditation techniques tailored for modern lifestyles. Choose a practice or explore practical meditation methods for quick and lasting results.
+          </p>
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-12">
             {meditations.map((meditation) => (
               <MeditationCard
                 key={meditation.id}
@@ -56,6 +75,22 @@ export const MethodsPage = () => {
                 onStart={() => setSelectedMeditation(meditation.id)}
               />
             ))}
+          </div>
+
+          <h3 className="text-3xl font-bold text-center mb-8">Practical Meditation Methods</h3>
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {practicalMeditationContent.map((method, index) => (
+              <div key={index} className="p-6 bg-white rounded-lg shadow-md">
+                <h4 className="text-2xl font-semibold mb-4">{method.title}</h4>
+                <p className="text-gray-600">{method.description}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-12 text-center">
+            <p className="text-lg text-gray-700">
+              Meditation not only transforms individuals but also creates a peaceful society. Practice under proper guidance for the best results.
+            </p>
           </div>
         </div>
       )}
