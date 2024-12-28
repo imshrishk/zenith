@@ -134,7 +134,7 @@ export const DiscussionsPage = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Discussions</h1>
+        <h1 className="text-3xl font-bold">Forum</h1>
         {user && (
           <Button onClick={() => setIsCreatingThread(true)}>
             <Plus className="h-4 w-4 mr-2" />
