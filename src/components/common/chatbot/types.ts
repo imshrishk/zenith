@@ -4,8 +4,8 @@ export interface ChatMessage {
     isUser: boolean;
     timestamp: Date;
   }
-  
-  export interface ChatInputProps {
+
+export interface ChatInputProps {
     onSend: (message: string) => void;
     disabled?: boolean;
     placeholder?: string;

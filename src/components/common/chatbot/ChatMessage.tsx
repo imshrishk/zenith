@@ -21,7 +21,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = memo(({ message }) => {
         className={`max-w-[75%] rounded-lg p-3 ${
           message.isUser
             ? 'bg-blue-500 text-white'
-            : 'bg-gray-200 text-gray-800'
+            : 'bg-gray-100 text-gray-800'
         }`}
       >
         <p className="text-sm whitespace-pre-wrap break-words">

@@ -39,38 +39,36 @@ const initialState: ChatState = {
 };
 
 export const Chatbot: React.FC = () => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [state, dispatch] = useReducer(chatReducer, initialState);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-    const chatContainerRef = useRef<HTMLDivElement>(null);
-  
-    const scrollToBottom = useCallback(() => {
-      if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-      }
-    }, []);
-  
-    useEffect(() => {
-      scrollToBottom();
-    }, [state.messages, scrollToBottom]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [state, dispatch] = useReducer(chatReducer, initialState);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (chatContainerRef.current) {
-        const vh = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty('--vh', `${vh}px`);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    handleResize();
-    return () => window.removeEventListener('resize', handleResize);
+  const scrollToBottom = useCallback(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   }, []);
 
   useEffect(() => {
-    if (!isOpen) {
-      dispatch({ type: 'SET_ERROR', payload: null });
-    }
+    scrollToBottom();
+  }, [state.messages, scrollToBottom]);
+
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (
+        isOpen &&
+        chatContainerRef.current &&
+        !chatContainerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
   }, [isOpen]);
 
   const handleSendMessage = async (content: string) => {
@@ -95,104 +93,99 @@ export const Chatbot: React.FC = () => {
         isUser: false,
         timestamp: new Date(),
       };
+
       dispatch({ type: 'ADD_MESSAGE', payload: botMessage });
     } catch (error) {
-      dispatch({ 
-        type: 'SET_ERROR', 
-        payload: 'Failed to send message. Please try again.' 
+      dispatch({
+        type: 'SET_ERROR',
+        payload: 'Failed to send message. Please try again.'
       });
-      console.error('Error sending message:', error);
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
-  const unreadCount = state.messages.filter(m => !m.isUser).length;
-
-    return (
-        <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end">
+  return (
+    <div className="fixed bottom-0 right-0 z-40 flex flex-col items-end p-4">
+      <div
+        className={`mb-16 transition-all duration-300 ease-in-out ${
+          isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
+        }`}
+      >
         <div
-            className={`mb-4 transition-all duration-300 ease-in-out ${
-            isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-            }`}
-            aria-hidden={!isOpen}
+          ref={chatContainerRef}
+          className="h-[500px] w-[350px] rounded-lg bg-white shadow-xl flex flex-col"
+          role="dialog"
+          aria-label="Chat window"
         >
-            <div
-            ref={chatContainerRef}
-            className="h-[500px] w-[350px] rounded-lg bg-white shadow-xl"
-            role="dialog"
-            aria-label="Chat window"
+          <div className="flex h-14 items-center justify-between rounded-t-lg bg-blue-600 px-4 text-white">
+            <div className="flex items-center space-x-2">
+              <MessageCircle className="h-5 w-5" />
+              <h3 className="text-lg font-semibold">Ask Zenith AI</h3>
+            </div>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="rounded-full p-1 hover:bg-blue-700 transition-colors"
+              aria-label="Close chat"
             >
-            <div className="flex h-14 items-center justify-between rounded-t-lg bg-blue-600 px-4 text-white">
-                <div className="flex items-center space-x-2">
-                <MessageCircle className="h-5 w-5" />
-                <h3 className="text-lg font-semibold">Ask Zenith AI</h3>
-                </div>
-                <button
-                onClick={() => setIsOpen(false)}
-                className="rounded-full p-1 hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
-                aria-label="Close chat"
-                >
-                <X className="h-5 w-5" />
-                </button>
-            </div>
-            <div
-                className="h-[calc(100%-8rem)] overflow-y-auto p-4"
-                role="log"
-                aria-live="polite"
-            >
-                {state.messages.length === 0 && (
-                <div className="flex h-full items-center justify-center text-gray-500">
-                    <p>How can I help you today?</p>
-                </div>
-                )}
-                {state.messages.map((message) => (
-                <ChatMessage key={message.id} message={message} />
-                ))}
-                {state.isLoading && (
-                <div className="flex justify-start">
-                    <div className="flex items-center space-x-2 rounded-lg bg-gray-100 p-3">
-                    <Loader className="h-4 w-4 animate-spin text-blue-600" />
-                    <span className="text-sm text-gray-600">Thinking...</span>
-                    </div>
-                </div>
-                )}
-                {state.error && (
-                <div className="mt-2 rounded-lg bg-red-50 p-3 text-sm text-red-600" role="alert">
-                    {state.error}
-                </div>
-                )}
-                <div ref={messagesEndRef} />
-            </div>
-            <div className="absolute bottom-0 w-full border-t bg-white p-4">
-                <ChatInput
-                onSend={handleSendMessage}
-                disabled={state.isLoading}
-                placeholder="Type your message..."
-                />
-            </div>
-            </div>
-        </div>
-        <button
-            onClick={() => setIsOpen(prev => !prev)}
-            className={`group relative rounded-full bg-blue-600 p-4 text-white shadow-lg transition-all duration-300 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 ${
-            isOpen ? 'rotate-180 transform' : ''
-            }`}
-            aria-label={isOpen ? 'Close chat' : 'Open chat'}
-            aria-expanded={isOpen}
-        >
-            <MessageCircle className="h-6 w-6" />
-            {!isOpen && state.messages.filter(m => !m.isUser).length > 0 && (
-            <span
-                className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold"
-                aria-label={`${state.messages.filter(m => !m.isUser).length} unread messages`}
-            >
-                {state.messages.filter(m => !m.isUser).length}
-            </span>
-            )}
-        </button>
-        </div>
-    );
-    };
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
-    export default Chatbot;
+          <div className="flex-1 overflow-y-auto p-4" role="log">
+            {state.messages.length === 0 && (
+              <div className="flex h-full items-center justify-center text-gray-500">
+                <p>How can I help you today?</p>
+              </div>
+            )}
+            {state.messages.map((message) => (
+              <ChatMessage key={message.id} message={message} />
+            ))}
+            {state.isLoading && (
+              <div className="flex justify-start">
+                <div className="flex items-center space-x-2 rounded-lg bg-gray-100 p-3">
+                  <Loader className="h-4 w-4 animate-spin text-blue-600" />
+                  <span className="text-sm text-gray-600">Thinking...</span>
+                </div>
+              </div>
+            )}
+            {state.error && (
+              <div className="mt-2 rounded-lg bg-red-50 p-3 text-sm text-red-600" role="alert">
+                {state.error}
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="border-t bg-white p-4">
+            <ChatInput
+              onSend={handleSendMessage}
+              disabled={state.isLoading}
+              placeholder="Type your message..."
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="fixed bottom-4 right-4">
+        <button
+          onClick={() => setIsOpen(prev => !prev)}
+          className={`group relative rounded-full bg-blue-600 p-4 text-white shadow-lg transition-all duration-300 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 ${
+            isOpen ? 'rotate-180 transform' : ''
+          }`}
+          aria-label={isOpen ? 'Close chat' : 'Open chat'}
+          aria-expanded={isOpen}
+        >
+          <MessageCircle className="h-6 w-6" />
+          {!isOpen && state.messages.filter(m => !m.isUser).length > 0 && (
+            <span
+              className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold"
+            >
+              {state.messages.filter(m => !m.isUser).length}
+            </span>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+};

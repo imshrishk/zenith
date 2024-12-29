@@ -1,7 +1,7 @@
+// src/components/common/Header.tsx
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, User, LogOut } from "lucide-react";
-import { Button } from "./Button";
+import { Menu, X, LogOut } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { GoogleSignInButton } from "../auth/GoogleSignInButton";
 
@@ -19,47 +19,49 @@ export const Header: React.FC = () => {
   ];
 
   return (
-    <header className="bg-white shadow-md">
+    <header className="relative bg-white shadow-md z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
-          {/* Logo */}
           <Link to="/" className="text-xl font-bold text-gray-800">
             ZenithMind
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-4">
+          <nav className="hidden md:flex space-x-6">
             {navigationLinks.map((link) => (
               <Link
                 key={link.name}
                 to={link.href}
-                className="text-gray-600 hover:text-gray-800"
+                className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
               >
                 {link.name}
               </Link>
             ))}
           </nav>
 
-          {/* User Actions */}
           <div className="flex items-center space-x-4">
             {user ? (
               <>
-                <span className="text-gray-800 font-medium">
+                <span className="text-gray-800 font-medium hidden md:block">
                   {user.displayName || "User"}
                 </span>
-                <Button onClick={signOut}>
+                <button
+                  onClick={signOut}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
+                >
                   <LogOut size={16} />
-                  Logout
-                </Button>
+                  <span className="hidden md:inline">Logout</span>
+                </button>
               </>
             ) : (
-              <GoogleSignInButton />
+              <div className="hidden md:block">
+                <GoogleSignInButton />
+              </div>
             )}
 
-            {/* Mobile Menu Button */}
             <button
-              className="md:hidden text-gray-800"
+              className="md:hidden text-gray-800 hover:text-gray-600 transition-colors duration-200"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="Toggle menu"
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -67,36 +69,33 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Navigation */}
+      {/* Mobile menu */}
       {isMenuOpen && (
-        <nav className="md:hidden bg-white shadow-lg">
-          <ul className="space-y-2 p-4">
+        <nav className="md:hidden absolute w-full bg-white shadow-lg">
+          <div className="px-4 py-2 space-y-2">
             {navigationLinks.map((link) => (
-              <li key={link.name}>
-                <Link
-                  to={link.href}
-                  className="block text-gray-600 hover:text-gray-800"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {link.name}
-                </Link>
-              </li>
+              <Link
+                key={link.name}
+                to={link.href}
+                className="block py-2 text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {link.name}
+              </Link>
             ))}
             {user ? (
-              <li>
-                <button
-                  onClick={signOut}
-                  className="w-full text-left text-gray-600 hover:text-gray-800"
-                >
-                  Logout
-                </button>
-              </li>
+              <button
+                onClick={signOut}
+                className="w-full text-left py-2 text-gray-600 hover:text-gray-800 transition-colors duration-200"
+              >
+                Logout
+              </button>
             ) : (
-              <li>
+              <div className="py-2">
                 <GoogleSignInButton />
-              </li>
+              </div>
             )}
-          </ul>
+          </div>
         </nav>
       )}
     </header>
