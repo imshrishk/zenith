@@ -3,7 +3,7 @@ import { MessageCircle, X, Loader } from 'lucide-react';
 import { ChatMessage as ChatMessageType } from './types';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
-import { generateResponse } from '../../../services/chatService';
+import { generateResponse } from '../../../services/ChatService';
 
 interface ChatState {
   messages: ChatMessageType[];
