@@ -10,7 +10,7 @@ import { QnAPage } from './components/pages/QnA';
 import { DiscussionsPage } from './components/pages/Discussions';
 import { ProfilePage } from './components/pages/Profile';
 import { EbookPage } from './components/pages/Ebook';
-import { Chatbot } from './components/common/Chatbot';
+import { Chatbot } from './components/common/chatbot';
 
 export default function App() {
   return (
