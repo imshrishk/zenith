@@ -9,6 +9,8 @@ import { FAQPage } from './components/pages/FAQ';
 import { QnAPage } from './components/pages/QnA';
 import { DiscussionsPage } from './components/pages/Discussions';
 import { ProfilePage } from './components/pages/Profile';
+import { EbookPage } from './components/pages/Ebook';
+import { Chatbot } from './components/common/Chatbot';
 
 export default function App() {
   return (
@@ -24,9 +26,11 @@ export default function App() {
             <Route path="/qna" element={<QnAPage />} />
             <Route path="/discussions" element={<DiscussionsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/ebook" element={<EbookPage />} />
           </Routes>
         </main>
         <Footer />
+        <Chatbot />
       </div>
     </Router>
   );
