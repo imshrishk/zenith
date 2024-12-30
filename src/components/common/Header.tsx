@@ -1,4 +1,3 @@
-// src/components/common/Header.tsx
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, LogOut } from "lucide-react";
