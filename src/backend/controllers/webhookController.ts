@@ -5,78 +5,89 @@ import { doc, setDoc, collection, addDoc, serverTimestamp } from 'firebase/fires
 
 export const handleWebhook = async (req: Request, res: Response) => {
   try {
+    // Verify webhook signature
     const webhookSecret = process.env.VITE_RAZORPAY_WEBHOOK_SECRET!;
     const signature = req.headers['x-razorpay-signature'];
     
+    if (!signature) {
+      return res.status(400).json({ error: 'Missing signature' });
+    }
+
     const shasum = crypto.createHmac('sha256', webhookSecret);
     shasum.update(JSON.stringify(req.body));
     const digest = shasum.digest('hex');
-    
-    if (digest === signature) {
-      const event = req.body;
-      const paymentEntity = event.payload.payment.entity;
-      
-      switch (event.event) {
-        case 'payment.captured':
-          await handleSuccessfulPayment(paymentEntity);
-          break;
-          
-        case 'payment.failed':
-          await handleFailedPayment(paymentEntity);
-          break;
-      }
-      
-      res.status(200).json({ received: true });
-    } else {
-      console.error('Invalid webhook signature');
-      res.status(400).json({ error: 'Invalid signature' });
+
+    if (digest !== signature) {
+      console.error('Webhook signature verification failed');
+      return res.status(400).json({ error: 'Invalid signature' });
     }
+
+    // Process webhook event
+    const event = req.body;
+    const paymentEntity = event.payload.payment?.entity;
+    
+    if (!paymentEntity) {
+      return res.status(400).json({ error: 'Invalid payload structure' });
+    }
+
+    switch (event.event) {
+      case 'payment.captured':
+        await handlePaymentSuccess(paymentEntity);
+        break;
+      case 'payment.failed':
+        await handlePaymentFailure(paymentEntity);
+        break;
+      case 'payment.authorized':
+        await handlePaymentAuthorized(paymentEntity);
+        break;
+      default:
+        console.log(`Unhandled webhook event: ${event.event}`);
+    }
+
+    res.json({ status: 'success' });
   } catch (error) {
     console.error('Webhook processing error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Webhook processing failed' });
   }
 };
 
-async function handleSuccessfulPayment(payment: any) {
+async function handlePaymentSuccess(payment: any) {
   try {
-    // 1. Record the payment in payments collection
-    await addDoc(collection(db, 'payments'), {
+    const paymentDoc = {
       paymentId: payment.id,
       orderId: payment.order_id,
-      amount: payment.amount / 100, // Convert from paise to rupees
+      amount: payment.amount / 100, // Convert to actual currency
       status: 'completed',
-      userId: payment.notes?.userId, // Get userId from payment notes
+      userId: payment.notes?.userId,
       email: payment.email,
       timestamp: serverTimestamp(),
-      productId: 'ebook'
-    });
+      method: payment.method,
+      currency: payment.currency
+    };
 
-    // 2. Grant ebook access to user
+    // Store payment record
+    await addDoc(collection(db, 'payments'), paymentDoc);
+
+    // Update user access if userId exists
     if (payment.notes?.userId) {
-      await setDoc(doc(db, 'users', payment.notes.userId), {
-        hasEbookAccess: true,
-        ebookPurchaseDate: serverTimestamp()
-      }, { merge: true });
+      await setDoc(
+        doc(db, 'users', payment.notes.userId),
+        {
+          hasEbookAccess: true,
+          ebookPurchaseDate: serverTimestamp(),
+          lastPayment: paymentDoc
+        },
+        { merge: true }
+      );
     }
-
-    // 3. Record transaction in user's purchase history
-    await addDoc(collection(db, `users/${payment.notes?.userId}/purchases`), {
-      productId: 'ebook',
-      amount: payment.amount / 100,
-      purchaseDate: serverTimestamp(),
-      paymentId: payment.id,
-      status: 'completed'
-    });
-
   } catch (error) {
-    console.error('Error handling successful payment:', error);
+    console.error('Error handling payment success:', error);
     throw error;
   }
 }
 
-async function handleFailedPayment(payment: any) {
+async function handlePaymentFailure(payment: any) {
   try {
-    // Record failed payment attempt
     await addDoc(collection(db, 'payments'), {
       paymentId: payment.id,
       orderId: payment.order_id,
@@ -85,16 +96,28 @@ async function handleFailedPayment(payment: any) {
       userId: payment.notes?.userId,
       email: payment.email,
       timestamp: serverTimestamp(),
-      productId: 'ebook',
-      errorDescription: payment.error_description,
-      errorCode: payment.error_code
+      errorCode: payment.error_code,
+      errorDescription: payment.error_description
     });
-
-    // Optionally notify user about failed payment
-    // You can implement email notification here
-
   } catch (error) {
-    console.error('Error handling failed payment:', error);
+    console.error('Error handling payment failure:', error);
+    throw error;
+  }
+}
+
+async function handlePaymentAuthorized(payment: any) {
+  try {
+    await addDoc(collection(db, 'payments'), {
+      paymentId: payment.id,
+      orderId: payment.order_id,
+      amount: payment.amount / 100,
+      status: 'authorized',
+      userId: payment.notes?.userId,
+      email: payment.email,
+      timestamp: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Error handling payment authorization:', error);
     throw error;
   }
 }
