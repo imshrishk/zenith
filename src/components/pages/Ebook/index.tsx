@@ -1,23 +1,45 @@
 import React from 'react';
 import { Button } from '../../common/Button';
 import { initializePayment } from '../../../services/paymentService';
+import { useAuthStore } from '../../../store/authStore';
 
 export const EbookPage: React.FC = () => {
+  const { user } = useAuthStore();
+
   const handlePurchase = async () => {
+    if (!user) {
+      window.location.href = '/login';
+      return;
+    }
+  
     try {
+      const amountInPaise = 151 * 100;
+      
+      // Ensure we have a valid auth token
+      const authToken = await user.getIdToken();
+      localStorage.setItem('token', authToken);
+  
       await initializePayment({
-        amount: 15100,
+        amount: amountInPaise,
         currency: 'INR',
         receipt: `receipt_${Date.now()}`,
         notes: {
-          product: 'Meditation Ebook'
+          product: 'Meditation Ebook',
+          userId: user.uid,
+          environment: process.env.NODE_ENV || 'development'
         },
-        name: user?.displayName,
-        email: user?.email,
-        phone: user?.phoneNumber
+        name: user.displayName || '',
+        email: user.email || '',
+        phone: user.phoneNumber || '',
+        userId: user.uid
       });
     } catch (error) {
-      // Handle error
+      console.error('Payment initialization failed:', error);
+      // Log the full error for debugging
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+      }
+      alert('Payment initialization failed. Please try again.');
     }
   };
 
@@ -38,7 +60,7 @@ export const EbookPage: React.FC = () => {
           <p className="text-2xl font-bold">₹151 only</p>
           <p className="text-gray-600">One-time purchase, lifetime access</p>
         </div>
-        <Button 
+        <Button
           onClick={handlePurchase}
           className="w-full md:w-auto"
         >

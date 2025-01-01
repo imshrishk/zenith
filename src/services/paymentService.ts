@@ -1,25 +1,20 @@
 import { create } from 'zustand';
-import { logPaymentEvent } from './logService';
+import { logPaymentEvent } from './LogService';
 import { PaymentDetails, PaymentResponse } from '../types/payment';
-import { logAnalyticsEvent } from '../config/firebase';
 
 interface PaymentState {
   loading: boolean;
   error: string | null;
   orderDetails: PaymentDetails | null;
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  setOrderDetails: (details: PaymentDetails | null) => void;
-  reset: () => void;
 }
 
 export const usePaymentStore = create<PaymentState>((set) => ({
   loading: false,
   error: null,
   orderDetails: null,
-  setLoading: (loading) => set({ loading }),
-  setError: (error) => set({ error }),
-  setOrderDetails: (details) => set({ orderDetails: details }),
+  setLoading: (loading: boolean) => set({ loading }),
+  setError: (error: string | null) => set({ error }),
+  setOrderDetails: (details: PaymentDetails | null) => set({ orderDetails: details }),
   reset: () => set({ loading: false, error: null, orderDetails: null })
 }));
 
@@ -37,58 +32,47 @@ export const initializePayment = async (options: {
   store.setLoading(true);
 
   try {
-    // Validate amount
-    if (options.amount < 100 || options.amount > 1000000) {
-      throw new Error('Invalid amount');
-    }
+    // Convert amount to smallest currency unit (paise for INR)
+    const amountInSmallestUnit = options.amount * 100;
+
+    // Load Razorpay script
+    await loadRazorpayScript();
 
     // Create order
-    const response = await fetch('/api/payments/create-order', {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/create-order`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
       },
-      body: JSON.stringify(options),
+      body: JSON.stringify({
+        ...options,
+        amount: amountInSmallestUnit
+      }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to create order');
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to create order');
     }
 
     const order = await response.json();
-    
-    store.setOrderDetails({
-      orderId: order.id,
-      amount: options.amount,
-      currency: options.currency,
-      receipt: options.receipt,
-      status: 'created',
-      userId: options.userId,
-      email: options.email
-    });
-
-    await logPaymentEvent('ORDER_CREATED', {
-      orderId: order.id,
-      amount: options.amount,
-      userId: options.userId
-    });
 
     // Initialize Razorpay
     const razorpay = new (window as any).Razorpay({
       key: import.meta.env.VITE_RAZORPAY_KEY_ID,
       order_id: order.id,
-      amount: options.amount,
+      amount: amountInSmallestUnit,
       currency: options.currency,
       name: 'ZenithMind',
       description: options.notes?.product || 'Purchase',
-      image: '/assets/images/logo.png',
-      handler: function(response: PaymentResponse) {
-        handlePaymentSuccess(response, options.userId);
-      },
       prefill: {
         name: options.name || '',
         email: options.email || '',
         contact: options.phone || ''
+      },
+      handler: function(response: PaymentResponse) {
+        handlePaymentSuccess(response, options.userId);
       },
       modal: {
         ondismiss: function() {
@@ -98,12 +82,8 @@ export const initializePayment = async (options: {
       }
     });
 
-    razorpay.on('payment.failed', function(resp: any) {
-      handlePaymentFailure(resp);
-    });
-
     razorpay.open();
-
+    
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Payment initialization failed';
     store.setError(errorMessage);
@@ -118,18 +98,12 @@ const handlePaymentSuccess = async (response: PaymentResponse, userId?: string) 
   const store = usePaymentStore.getState();
   store.setLoading(true);
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
-
   try {
-    if (!response.razorpay_order_id || !response.razorpay_payment_id || !response.razorpay_signature) {
-      throw new Error('Invalid payment response');
-    }
-
-    const verification = await fetch('/api/payments/verify', {
+    const verification = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/verify`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
       },
       body: JSON.stringify({
         razorpay_order_id: response.razorpay_order_id,
@@ -137,62 +111,37 @@ const handlePaymentSuccess = async (response: PaymentResponse, userId?: string) 
         razorpay_signature: response.razorpay_signature,
         userId
       }),
-      signal: controller.signal
     });
-
-    clearTimeout(timeoutId);
 
     if (!verification.ok) {
       throw new Error('Payment verification failed');
     }
 
-    store.setOrderDetails({
-      ...store.orderDetails!,
-      status: 'completed'
-    });
-
-    await logPaymentEvent('PAYMENT_SUCCESS', {
-      orderId: response.razorpay_order_id,
-      paymentId: response.razorpay_payment_id,
-      userId
-    });
-
-    logAnalyticsEvent('payment_success', {
-      order_id: response.razorpay_order_id,
-      payment_id: response.razorpay_payment_id,
-    });
-
-    // Redirect to success page
-    window.location.href = '/payment/success';
-
+    const verificationData = await verification.json();
+    if (verificationData.status === 'success') {
+      window.location.href = '/payment/success';
+    } else {
+      throw new Error('Payment verification failed');
+    }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Payment verification failed';
-    store.setError(errorMessage);
-    await logPaymentEvent('PAYMENT_VERIFICATION_ERROR', { error: errorMessage });
-    throw error;
+    store.setError('Payment verification failed');
+    window.location.href = '/payment/failed';
   } finally {
     store.setLoading(false);
   }
 };
 
-const handlePaymentFailure = async (response: any) => {
-  const store = usePaymentStore.getState();
-  store.setError(response.error.description);
-  
-  store.setOrderDetails({
-    ...store.orderDetails!,
-    status: 'failed'
-  });
+const loadRazorpayScript = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if ((window as any).Razorpay) {
+      resolve();
+      return;
+    }
 
-  await logPaymentEvent('PAYMENT_FAILED', {
-    orderId: response.error.metadata.order_id,
-    errorCode: response.error.code,
-    errorDescription: response.error.description
-  });
-
-  logAnalyticsEvent('payment_failed', {
-    order_id: response.error.metadata.order_id,
-    error_code: response.error.code,
-    error_description: response.error.description
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load Razorpay SDK'));
+    document.body.appendChild(script);
   });
 };

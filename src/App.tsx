@@ -10,6 +10,8 @@ import { QnAPage } from './components/pages/QnA';
 import { DiscussionsPage } from './components/pages/Discussions';
 import { ProfilePage } from './components/pages/Profile';
 import { EbookPage } from './components/pages/Ebook';
+import { PaymentSuccess } from './components/pages/Payment/Success';
+import { PaymentFailed } from './components/pages/Payment/Failed';
 import { Chatbot } from './components/common/chatbot';
 
 export default function App() {
@@ -27,6 +29,8 @@ export default function App() {
             <Route path="/discussions" element={<DiscussionsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/ebook" element={<EbookPage />} />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/payment/failed" element={<PaymentFailed />} />
           </Routes>
         </main>
         <Footer />
