@@ -14,7 +14,7 @@ export const Header: React.FC = () => {
     { name: "Benefits", href: "/benefits" },
     { name: "FAQ", href: "/faq" },
     { name: "Forum", href: "/discussions" },
-    { name: "Ebook", href: "/ebook" },
+    /*{ name: "Ebook", href: "/ebook" },*/
   ];
 
   return (
