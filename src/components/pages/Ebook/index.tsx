@@ -11,14 +11,10 @@ export const EbookPage: React.FC = () => {
       window.location.href = '/login';
       return;
     }
-  
     try {
-      const amountInPaise = 151 * 100;
-      
-      // Ensure we have a valid auth token
+      const amountInPaise = 151 * 100; // 151 INR in paise
       const authToken = await user.getIdToken();
       localStorage.setItem('token', authToken);
-  
       await initializePayment({
         amount: amountInPaise,
         currency: 'INR',
@@ -34,10 +30,8 @@ export const EbookPage: React.FC = () => {
         userId: user.uid
       });
     } catch (error) {
-      console.error('Payment initialization failed:', error);
-      // Log the full error for debugging
       if (error instanceof Error) {
-        console.error('Error details:', error.message);
+        console.error(error.message);
       }
       alert('Payment initialization failed. Please try again.');
     }
@@ -60,10 +54,7 @@ export const EbookPage: React.FC = () => {
           <p className="text-2xl font-bold">₹151 only</p>
           <p className="text-gray-600">One-time purchase, lifetime access</p>
         </div>
-        <Button
-          onClick={handlePurchase}
-          className="w-full md:w-auto"
-        >
+        <Button onClick={handlePurchase} className="w-full md:w-auto">
           Purchase Now
         </Button>
       </div>

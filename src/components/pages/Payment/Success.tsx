@@ -17,21 +17,17 @@ export const PaymentSuccess: React.FC = () => {
       navigate('/login');
       return;
     }
-    
     logAnalyticsEvent('payment_success_page_view');
   }, [user, navigate]);
 
   const handleDownload = async () => {
     setDownloading(true);
     setDownloadError(null);
-    
     try {
       await downloadEbook();
       logAnalyticsEvent('manual_ebook_download_success');
     } catch (error) {
-      const errorMessage = error instanceof Error ? 
-        error.message : 
-        'Failed to download ebook. Please try again or contact support.';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to download ebook. Please try again or contact support.';
       setDownloadError(errorMessage);
       logAnalyticsEvent('manual_ebook_download_error');
     } finally {
@@ -53,17 +49,10 @@ export const PaymentSuccess: React.FC = () => {
           )}
         </div>
         <div className="mt-8 space-y-4">
-          <Button
-            onClick={handleDownload}
-            disabled={downloading}
-            className="w-full"
-          >
+          <Button onClick={handleDownload} disabled={downloading} className="w-full">
             {downloading ? 'Downloading...' : 'Download Ebook'}
           </Button>
-          <Button
-            onClick={() => navigate('/')}
-            className="w-full bg-gray-50 text-gray-900 hover:bg-gray-100"
-          >
+          <Button onClick={() => navigate('/')} className="w-full bg-gray-50 text-gray-900 hover:bg-gray-100">
             Return to Home
           </Button>
         </div>

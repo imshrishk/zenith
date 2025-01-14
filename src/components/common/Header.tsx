@@ -14,7 +14,7 @@ export const Header: React.FC = () => {
     { name: "Benefits", href: "/benefits" },
     { name: "FAQ", href: "/faq" },
     { name: "Forum", href: "/discussions" },
-    /*{ name: "Ebook", href: "/ebook" },*/
+    { name: "Ebook", href: "/ebook" }, // Add the Ebook link here
   ];
 
   return (
@@ -24,7 +24,6 @@ export const Header: React.FC = () => {
           <Link to="/" className="text-xl font-bold text-gray-800">
             ZenithMind
           </Link>
-
           <nav className="hidden md:flex space-x-6">
             {navigationLinks.map((link) => (
               <Link
@@ -36,7 +35,6 @@ export const Header: React.FC = () => {
               </Link>
             ))}
           </nav>
-
           <div className="flex items-center space-x-4">
             {user ? (
               <>
@@ -56,7 +54,6 @@ export const Header: React.FC = () => {
                 <GoogleSignInButton />
               </div>
             )}
-
             <button
               className="md:hidden text-gray-800 hover:text-gray-600 transition-colors duration-200"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -67,8 +64,6 @@ export const Header: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Mobile menu */}
       {isMenuOpen && (
         <nav className="md:hidden absolute w-full bg-white shadow-lg">
           <div className="px-4 py-2 space-y-2">

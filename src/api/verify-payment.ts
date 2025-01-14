@@ -4,7 +4,6 @@ import crypto from 'crypto';
 export async function verifyPayment(req: Request, res: Response) {
   try {
     const { paymentId, orderId, signature } = req.body;
-    
     const text = `${orderId}|${paymentId}`;
     const generated_signature = crypto
       .createHmac('sha256', process.env.VITE_RAZORPAY_KEY_SECRET!)
@@ -17,7 +16,6 @@ export async function verifyPayment(req: Request, res: Response) {
       res.status(400).json({ error: 'Invalid signature' });
     }
   } catch (error) {
-    console.error('Payment verification failed:', error);
     res.status(500).json({ error: 'Payment verification failed' });
   }
 }

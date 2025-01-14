@@ -5,7 +5,6 @@ import { doc, setDoc, updateDoc } from 'firebase/firestore';
 
 export async function webhook(req: Request, res: Response) {
   try {
-    // Verify webhook signature
     const shasum = crypto.createHmac('sha256', process.env.VITE_RAZORPAY_WEBHOOK_SECRET!);
     shasum.update(JSON.stringify(req.body));
     const digest = shasum.digest('hex');
@@ -14,7 +13,6 @@ export async function webhook(req: Request, res: Response) {
       const event = req.body.event;
       const payment = req.body.payload.payment.entity;
 
-      // Handle different payment events
       switch (event) {
         case 'payment.captured':
           await handlePaymentSuccess(payment);
@@ -29,12 +27,11 @@ export async function webhook(req: Request, res: Response) {
       res.status(400).json({ error: 'Invalid signature' });
     }
   } catch (error) {
-    console.error('Webhook processing failed:', error);
     res.status(500).json({ error: 'Webhook processing failed' });
   }
 }
 
-async function handlePaymentSuccess(payment: any) {
+async function handlePaymentSuccess(payment) {
   const paymentRef = doc(db, 'payments', payment.order_id);
   await setDoc(paymentRef, {
     paymentId: payment.id,
@@ -46,7 +43,6 @@ async function handlePaymentSuccess(payment: any) {
     createdAt: new Date()
   });
 
-  // Update user's purchases
   const userRef = doc(db, 'users', payment.notes.userId);
   await updateDoc(userRef, {
     hasEbook: true,
@@ -54,7 +50,7 @@ async function handlePaymentSuccess(payment: any) {
   });
 }
 
-async function handlePaymentFailure(payment: any) {
+async function handlePaymentFailure(payment) {
   const paymentRef = doc(db, 'payments', payment.order_id);
   await setDoc(paymentRef, {
     paymentId: payment.id,

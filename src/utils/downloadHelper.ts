@@ -7,7 +7,6 @@ export const downloadEbook = async (): Promise<void> => {
     if (!token) {
       throw new Error('Authentication token not found');
     }
-
     const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/download-ebook`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -15,7 +14,6 @@ export const downloadEbook = async (): Promise<void> => {
       responseType: 'blob'
     });
 
-    // Check if the response is valid
     if (!(response.data instanceof Blob)) {
       throw new Error('Invalid download response');
     }
@@ -27,17 +25,13 @@ export const downloadEbook = async (): Promise<void> => {
     document.body.appendChild(link);
     link.click();
 
-    // Cleanup
     setTimeout(() => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     }, 100);
 
-    // Log successful download
     logAnalyticsEvent('ebook_download_success');
-
   } catch (error) {
-    console.error('Download failed:', error);
     logAnalyticsEvent('ebook_download_error', {
       error: error instanceof Error ? error.message : 'Unknown error'
     });
