@@ -23,7 +23,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
   existingFiles = []
 }) => {
   const [files, setFiles] = useState<UploadedFile[]>(existingFiles);
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,13 +31,12 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
     const fileType = file.type.startsWith('image/') ? 'image' : 'video';
     const storageRef = ref(storage, `uploads/${Date.now()}-${file.name}`);
     const uploadTask = uploadBytesResumable(storageRef, file);
-
     return new Promise((resolve, reject) => {
       uploadTask.on(
         'state_changed',
         (snapshot) => {
           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(progress);
+          setUploadProgress((prev) => ({ ...prev, [file.name]: progress }));
         },
         (error) => {
           reject(error);
@@ -60,10 +59,8 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
         setError(`Maximum ${maxFiles} files allowed`);
         return;
       }
-
       setIsUploading(true);
       setError(null);
-
       try {
         const uploadPromises = acceptedFiles.map(async (file) => {
           if (file.size > maxSizeMB * 1024 * 1024) {
@@ -71,7 +68,6 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
           }
           return await uploadFile(file);
         });
-
         const uploadedFiles = await Promise.all(uploadPromises);
         const newFiles = [...files, ...uploadedFiles];
         setFiles(newFiles);
@@ -80,13 +76,13 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
         setError(err instanceof Error ? err.message : 'Upload failed');
       } finally {
         setIsUploading(false);
-        setUploadProgress(0);
+        setUploadProgress({});
       }
     },
     [files, maxFiles, maxSizeMB, onUploadComplete]
   );
 
-  const removeFile = (index: number) => {
+  const removeFile = (index) => {
     const newFiles = files.filter((_, i) => i !== index);
     setFiles(newFiles);
     onUploadComplete(newFiles);
@@ -116,22 +112,25 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
           <p className="text-sm text-gray-500 text-center">
             {isDragActive
               ? 'Drop your files here'
-              : `Drag & drop files here, or click to select files`}
+              : 'Drag & drop files here, or click to select files'}
           </p>
           <p className="text-xs text-gray-400 mt-1">
             Supports: Images (PNG, JPG, GIF) and Videos (MP4, WebM, OGG) up to {maxSizeMB}MB
           </p>
         </div>
       </div>
-
-      {isUploading && <UploadProgress progress={uploadProgress} />}
-
+      {isUploading && (
+        <div className="mt-4">
+          {Object.entries(uploadProgress).map(([fileName, progress]) => (
+            <UploadProgress key={fileName} progress={progress} />
+          ))}
+        </div>
+      )}
       {error && (
         <div className="mt-2 text-sm text-red-500">
           {error}
         </div>
       )}
-
       {files.length > 0 && (
         <div className="mt-4">
           <div className="text-sm font-medium text-gray-700 mb-2">

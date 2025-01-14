@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Header } from './components/common/Header';
 import { Footer } from './components/common/Footer';
@@ -13,8 +13,11 @@ import { EbookPage } from './components/pages/Ebook';
 import { PaymentSuccess } from './components/pages/Payment/Success';
 import { PaymentFailed } from './components/pages/Payment/Failed';
 import { Chatbot } from './components/common/chatbot';
+import { useAnalytics } from './hooks/useAnalytics';
 
 export default function App() {
+  useAnalytics();
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-50 flex flex-col">
