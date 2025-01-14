@@ -15,16 +15,10 @@ export const PaymentFailed: React.FC = () => {
           <p className="mt-2 text-gray-600">We couldn't process your payment. Please try again.</p>
         </div>
         <div className="mt-8 space-y-4">
-          <Button
-            onClick={() => navigate('/ebook')}
-            className="w-full"
-          >
+          <Button onClick={() => navigate('/ebook')} className="w-full">
             Try Again
           </Button>
-          <Button
-            onClick={() => navigate('/')}
-            className="w-full bg-gray-50 text-gray-900 hover:bg-gray-100"
-          >
+          <Button onClick={() => navigate('/')} className="w-full bg-gray-50 text-gray-900 hover:bg-gray-100">
             Return to Home
           </Button>
         </div>
