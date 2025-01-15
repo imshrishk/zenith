@@ -1,16 +1,23 @@
 import React from 'react';
 import { Button } from '../../common/Button';
-import { initializePayment } from '../../../services/paymentService';
+// import { initializePayment } from '../../../services/paymentService';
 import { useAuthStore } from '../../../store/authStore';
 
 export const EbookPage: React.FC = () => {
   const { user } = useAuthStore();
 
-  const handlePurchase = async () => {
+  const handlePurchase = () => {
+    // Redirect to login if the user is not authenticated
     if (!user) {
       window.location.href = '/login';
       return;
     }
+
+    // Open the Razorpay payment link in a new tab
+    window.open('https://razorpay.me/@zenithmind', '_blank');
+    
+    // Old payment initialization logic
+    /*
     try {
       const amountInPaise = 151 * 100; // 151 INR in paise
       const authToken = await user.getIdToken();
@@ -35,6 +42,7 @@ export const EbookPage: React.FC = () => {
       }
       alert('Payment initialization failed. Please try again.');
     }
+    */
   };
 
   return (
