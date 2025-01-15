@@ -69,7 +69,7 @@ export const DiscussionsPage = () => {
     try {
       await deleteThread(threadId);
       trackUserEngagement('delete', 'thread');
-      await fetchThreads(); // Refresh the threads list
+      await fetchThreads();
     } catch (error) {
       setError('Failed to delete thread. Please try again.');
     }

@@ -9,6 +9,7 @@ import {
   arrayUnion,
   arrayRemove,
   getDocs,
+  deleteDoc,
   type QueryDocumentSnapshot,
   type Timestamp,
   FirestoreError
@@ -168,9 +169,17 @@ export const unlikeThread = async (threadId: string, userId: string): Promise<vo
 
 export const deleteThread = async (threadId: string): Promise<void> => {
   try {
+    if (!threadId) {
+      throw new Error('Thread ID is required');
+    }
+    
     const threadRef = doc(db, 'threads', threadId);
     await deleteDoc(threadRef);
   } catch (error) {
+    console.error('Error deleting thread:', error);
+    if (error instanceof FirestoreError) {
+      throw new Error(`Firebase error: ${error.message}`);
+    }
     throw new Error('Failed to delete thread');
   }
 };
@@ -180,18 +189,30 @@ export const deleteComment = async (
   commentId: string
 ): Promise<void> => {
   try {
+    if (!threadId || !commentId) {
+      throw new Error('Thread ID and Comment ID are required');
+    }
+
     const threadRef = doc(db, 'threads', threadId);
-    const thread = (await getDocs(query(collection(db, 'threads')))).docs
-      .find(doc => doc.id === threadId)?.data() as Thread;
-    
-    if (!thread) throw new Error('Thread not found');
-    
+    const threadSnapshot = await getDocs(query(collection(db, 'threads')));
+    const thread = threadSnapshot.docs
+      .find(doc => doc.id === threadId)
+      ?.data() as Thread;
+
+    if (!thread) {
+      throw new Error('Thread not found');
+    }
+
     const updatedComments = thread.comments.filter(
       comment => comment.id !== commentId
     );
-    
+
     await updateDoc(threadRef, { comments: updatedComments });
   } catch (error) {
+    console.error('Error deleting comment:', error);
+    if (error instanceof FirestoreError) {
+      throw new Error(`Firebase error: ${error.message}`);
+    }
     throw new Error('Failed to delete comment');
   }
 };
