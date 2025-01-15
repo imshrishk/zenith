@@ -1,5 +1,5 @@
 export const shareContent = async (title: string, text: string) => {
-  const shareUrl = "https://zenithmind.vercel.app/";
+  const shareUrl = "https://zenithmind.org/discussions";
   
   if (navigator.share) {
     try {
