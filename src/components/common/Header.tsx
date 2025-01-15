@@ -14,7 +14,8 @@ export const Header: React.FC = () => {
     { name: "Benefits", href: "/benefits" },
     { name: "FAQ", href: "/faq" },
     { name: "Forum", href: "/discussions" },
-    { name: "Ebook", href: "/ebook" }, // Add the Ebook link here
+    //{ name: "Ebook", href: "/ebook" },
+    { name: "Donate", href: "/donate" },
   ];
 
   return (
