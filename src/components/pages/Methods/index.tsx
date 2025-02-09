@@ -21,16 +21,8 @@ const meditations = [
 
 const practicalMeditationContent = [
   {
-    title: 'Dynamic Meditation',
-    description: 'Combining physical activity and breath holding (Kumbhak), Dynamic Meditation offers quicker results and simplicity. Personalize durations for optimal results.',
-  },
-  {
-    title: 'Dark Meditation',
-    description: 'Meditating in absolute darkness silences sensory inputs, accelerating spiritual progress. Historically practiced in caves, it remains a powerful method today.',
-  },
-  {
-    title: 'Dark Dynamic Meditation',
-    description: 'Combining the benefits of Dynamic Meditation with darkness, this is one of the most effective meditation practices for profound spiritual growth.',
+    title: 'Belly Breathing ',
+    description: 'This is the simplest method of meditation.  When we are in meditation, we automatically start breathing from belly and its reverse is also true. Whenever we start breathing from belly we automatically become meditative.So, using this simple fact, we have developed a simplest method of meditation that we call Belly Breathing. So, start breathing from belly and meditation automatically happens. Do it now !',
   },
 ];
 
